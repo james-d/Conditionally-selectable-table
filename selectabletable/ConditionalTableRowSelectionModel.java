@@ -14,6 +14,7 @@ import javafx.beans.property.Property;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TableView.TableViewFocusModel;
 import javafx.scene.control.TableView.TableViewSelectionModel;
 
 /**
@@ -98,17 +99,6 @@ public class ConditionalTableRowSelectionModel<S extends Selectable> extends Tab
       }
     });
     
-    // update focus model when selection changes (this is a bit ugly)
-    selectedIndexProperty().addListener(new ChangeListener<Number>() {
-      @Override
-      public void changed(ObservableValue<? extends Number> observable,
-          Number oldValue, Number newValue) {
-        final int index = newValue.intValue();
-        if (index!=-1) {
-          getTableView().getFocusModel().focus(index);
-        }
-      }
-    });
   }
 
   /**
@@ -224,6 +214,7 @@ public class ConditionalTableRowSelectionModel<S extends Selectable> extends Tab
       setSelectedItem(firstSelectedItem);
       setSelectedIndex(firstSelectedIndex);
     }
+    getTableView().getFocusModel().focus(0);
   }
 
   /**
@@ -285,6 +276,7 @@ public class ConditionalTableRowSelectionModel<S extends Selectable> extends Tab
       setSelectedIndex(lastAddedIndex);
       setSelectedItem(lastAddedRow);
     }
+    getTableView().getFocusModel().focus(suppliedIndices.get(suppliedIndices.size()-1));
   }
 
   /** Selected the last row corresponding to an item that has its selectable property set to true.
@@ -302,7 +294,9 @@ public class ConditionalTableRowSelectionModel<S extends Selectable> extends Tab
         select(index);
         break ;
       }
+      index-- ;
     }
+    getTableView().getFocusModel().focus(getTableModel().size()-1);
   }
 
   /**
@@ -319,6 +313,7 @@ public class ConditionalTableRowSelectionModel<S extends Selectable> extends Tab
       setSelectedIndex(index);
       selectedPositions.setAll(getPositionsForRow(index));
     }
+    getTableView().getFocusModel().focus(index);
   }
 
   /**
@@ -370,6 +365,7 @@ public class ConditionalTableRowSelectionModel<S extends Selectable> extends Tab
         selectedPositions.addAll(getPositionsForRow(index));
       }
     }
+    getTableView().getFocusModel().focus(index);
   }
 
   @Override
@@ -384,6 +380,7 @@ public class ConditionalTableRowSelectionModel<S extends Selectable> extends Tab
         selectedPositions.addAll(getPositionsForRow(index));
       }
     }
+    getTableView().getFocusModel().focus(index);
   }
 
   /**
@@ -401,7 +398,8 @@ public class ConditionalTableRowSelectionModel<S extends Selectable> extends Tab
    */
   @Override
   public void selectNext() {
-    final int focusedIndex = getTableView().getFocusModel().getFocusedIndex();
+    final TableViewFocusModel<S> focusModel = getTableView().getFocusModel();
+    final int focusedIndex = focusModel.getFocusedIndex();
     if (focusedIndex < 0) {
       return ;
     }
@@ -410,6 +408,9 @@ public class ConditionalTableRowSelectionModel<S extends Selectable> extends Tab
         select(index);
         break ;
       }
+    }
+    if (focusedIndex < getTableModel().size()-1) {
+      focusModel.focus(focusedIndex + 1);
     }
   }
 
@@ -427,7 +428,8 @@ public class ConditionalTableRowSelectionModel<S extends Selectable> extends Tab
    */
   @Override
   public void selectPrevious() {
-    final int focusedIndex = getTableView().getFocusModel().getFocusedIndex();
+    final TableViewFocusModel<S> focusModel = getTableView().getFocusModel();
+    final int focusedIndex = focusModel.getFocusedIndex();
     if (focusedIndex < 0) {
       return ;
     }
@@ -436,7 +438,10 @@ public class ConditionalTableRowSelectionModel<S extends Selectable> extends Tab
         select(index);
         break ;
       }
-    }    
+    }
+    if (focusedIndex > 0) {
+      focusModel.focus(focusedIndex-1);
+    }
   }
   
   @SuppressWarnings({ "rawtypes", "unchecked" })
